@@ -30,6 +30,10 @@ contextBridge.exposeInMainWorld('electron', {
   getWindowSize: () => invoke('window:getSize'),
   fitMiniHeight: (height) => invoke('window:fitMiniHeight', height),
   refreshHitRegions: () => invoke('window:refreshHitRegions'),
+  tv: {
+    setFullscreen: (enabled) => invoke('tv:setFullscreen', enabled),
+    setZoom: (factor) => invoke('tv:setZoom', factor),
+  },
   onNavigationHistory: (fn) => on('navigation:history', (_, direction) => fn(direction)),
   onWindowVisibility: (fn) => on('window:visibility', (_, hidden) => fn(!!hidden)),
   isWindowHidden: () => invoke('window:isHidden'),
@@ -231,6 +235,9 @@ contextBridge.exposeInMainWorld('electron', {
   spotifyLikesPoll: () => invoke('spotifyLikes:poll'),
   spotifyLikesAck: (progress) => invoke('spotifyLikes:ack', progress),
   spotifyLikesPush: (track) => invoke('spotifyLikes:push', track),
+  // Discovery's Spotify source: Made For You mixes (electron/ipc/spotifyLikes.js)
+  spotifyMadeForYou: (force) => invoke('spotify:madeForYou', force),
+  spotifyPlaylist: (uri, force) => invoke('spotify:playlist', uri, force),
   // AutoMix: a song's analysis (electron/automix)
   automixAnalyze: (track) => invoke('automix:analyze', track),
   // Flow's songs (electron/ipc/flow.js)

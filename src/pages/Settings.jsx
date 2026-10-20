@@ -5,6 +5,7 @@ import SplitWordsSettings from '../components/SplitWordsSettings'
 import { collectLocalPrefs, restoreLocalPrefs } from '../localPrefsBackup'
 import AppTabsSettings from '../components/AppTabsSettings'
 import { APP_LANGUAGES, useTranslation } from '../i18n'
+import TvModeSettings from '../tv/TvModeSettings'
 ﻿import React, { useEffect, useLayoutEffect, useState, useRef, createContext, useContext } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -27,6 +28,7 @@ import { ARTIST_SOURCES } from '../artistSources'
 import { repairMissingTracks } from '../ghostDownloads'
 import { plural } from '../plural'
 import { readCrossfadeSettings, CROSSFADE_MIN_S } from '../audio/crossfade'
+import { SPEED_MAX, SPEED_MIN, SPEED_STEP, usePlaybackSpeed } from '../playbackSpeed.mjs'
 import SoulseekSignIn from '../components/SoulseekSignIn'
 
 const EQ_BANDS = ['31Hz', '62Hz', '125Hz', '250Hz', '500Hz', '1kHz', '2kHz', '4kHz', '8kHz', '16kHz']
@@ -263,6 +265,8 @@ export default function Settings() {
   const panelFreeform = usePanelWidths(s => s.freeform)
   const setPanelFreeform = (freeform) => usePanelWidths.getState().set({ freeform })
   const replayGainMode = usePlayerStore(s => s.replayGainMode)
+  const playbackSpeed = usePlaybackSpeed(s => s.speed)
+  const setPlaybackSpeed = usePlaybackSpeed(s => s.setSpeed)
   // Seeded from the settings already read (and the version / tools found on
   // the last visit), so the first frame already has the real values: rows
   // used to appear, change text and push everything below them down.
@@ -1313,6 +1317,11 @@ activeCategory === 'data' ? usersTried
             )}
           </div>
         </Row>
+        <Row label={t("Download Folder")} desc={t("Optional folder inside your music library. Downloads are moved there and numbered in that folder; leave blank to keep the usual artist/album layout.")}>
+          <input type="text" value={settings.download_folder || ''} onChange={e => set('download_folder', e.target.value)}
+            placeholder={t("e.g. Downloads")} aria-label={t("Download Folder")}
+            className="w-52 max-w-full bg-card border border-border rounded-lg px-3 py-1.5 text-xs text-white outline-none focus:border-accent/50" />
+        </Row>
         <Row label={t("Simultaneous Downloads")} desc={t("How many downloads run at once; the rest wait. A playlist counts as one.")}>
           <select
             value={settings.download_concurrency || '3'}
@@ -1522,6 +1531,17 @@ activeCategory === 'data' ? usersTried
             <option value="album">{t('Album gain')}</option>
             <option value="smart">{t('Smart gain')}</option>
           </select>
+        </Row>
+        <Row label={t("Playback speed")} desc={t("Adjusts the speed of the music and keeps music videos in sync.")}>
+          <div className="flex items-center gap-3">
+            <input type="range" min={SPEED_MIN} max={SPEED_MAX} step={SPEED_STEP} value={playbackSpeed}
+              onChange={e => setPlaybackSpeed(parseFloat(e.target.value))}
+              aria-label={t("Playback speed")}
+              className="w-32 accent-accent cursor-pointer" />
+            <span className="w-12 text-right text-xs font-display tabular-nums text-white">{playbackSpeed.toFixed(2)}×</span>
+            <button type="button" onClick={() => setPlaybackSpeed(1)} disabled={playbackSpeed === 1}
+              className="text-xs text-muted hover:text-white transition-colors disabled:opacity-40">{t("Reset")}</button>
+          </div>
         </Row>
         <Row label={t("Fetch Lyrics Automatically")} desc={t("Off: songs only show the lyrics they carry themselves (in their tags or a .lrc next to them). Looking again from the lyrics panel still searches online.")}>
           <button
@@ -2065,7 +2085,12 @@ activeCategory === 'data' ? usersTried
         </div>
       </Section>
       )}
-
+      {inCategory('appearance') && (
+        <Section title="TV Mode">
+          <TvModeSettings />
+        </Section>
+      )}
+        
       {inCategory('appearance') && (
       <Section title={t("Now Playing")}>
         <Row label={t("Colour Background")} desc={t("Colour the side panel and full screen player from the album cover. Off: a dark background.")}>
