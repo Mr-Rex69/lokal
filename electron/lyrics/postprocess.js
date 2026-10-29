@@ -15,7 +15,7 @@ const { joinUnits, round3, lineEnd, hasKnownEnd } = require('./model')
  */
 function stripVoiceMarker(line) {
   const text = String(line.text || '')
-  const match = text.match(/^\\s*(v\\d+)\\s*(?::|：|[-–—]\\s*|\\s+)/i)
+  const match = text.match(/^\s*(v\d+)\s*(?::|：|[-–—]\s*|\s+)/i)
   if (!match) return line
 
   const voice = match[1].toLowerCase()
@@ -23,7 +23,13 @@ function stripVoiceMarker(line) {
   let words = Array.isArray(line.words) ? line.words : []
 
   // Some providers also tokenize the label as the first timed word.
-  if (words.length && new RegExp('^' + voice + '[:：-]?
+  if (words.length && new RegExp('^' + voice + '[:：-]?$', 'i').test(String(words[0].word || '').trim())) {
+    words = words.slice(1)
+  }
+
+  return { ...line, text: cleanedText, words, agent: line.agent || voice }
+}
+
 const MIN_GAP_SECONDS = 4
 
 // ---------------------------------------------------------------- background
